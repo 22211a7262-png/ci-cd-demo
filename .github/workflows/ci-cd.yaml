@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
 
@@ -40,21 +44,13 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Extract Metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
-        run: |
-          docker build -t $IMAGE_NAME .
+        run: docker build -t $IMAGE_NAME .
 
       - name: Push Docker Image
-        run: |
-          docker push $IMAGE_NAME
+        run: docker push $IMAGE_NAME
 
   security-check:
     needs: build-push
@@ -66,16 +62,13 @@ jobs:
 
       - name: Install Trivy
         run: |
-          sudo apt-get install -y wget gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install -y trivy
 
-      - name: Trivy Filesystem Scan
+      - name: Trivy FS Scan
         run: trivy fs --format table -o fs-report.json .
 
-      - name: Trivy Image Scan (NEW - Important)
+      - name: Trivy Image Scan
         run: trivy image $IMAGE_NAME
 
       - name: Install Gitleaks
@@ -83,3 +76,25 @@ jobs:
 
       - name: Gitleaks Scan
         run: gitleaks detect source . -r gitleaks-report.json -f json
+
+  deploy:
+    needs: security-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+
+      - name: Verify Cluster Connection
+        run: kubectl get nodes
+
+      - name: Deploy to Kubernetes
+        run: kubectl apply -f k8s/
+
+      - name: Restart Deployment (pull latest image)
+        run: kubectl rollout restart deployment ci-cd-app
