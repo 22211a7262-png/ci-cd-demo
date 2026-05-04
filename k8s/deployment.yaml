@@ -1,8 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ci-cd-app
 spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ci-cd-app
   template:
+    metadata:
+      labels:
+        app: ci-cd-app
     spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
         - name: ci-cd-app
           image: ghcr.io/22211a7262-png/ci-cd-demo:latest
+          ports:
+            - containerPort: 3000
