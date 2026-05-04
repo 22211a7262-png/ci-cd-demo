@@ -26,24 +26,4 @@ jobs:
       - name: Push Docker Image
         run: docker push ghcr.io/${{ github.repository }}:latest
 
-  deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Set Kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
-
-      - name: Verify Cluster
-        run: kubectl get nodes
-
-      - name: Skip Deploy
-        run: echo "Local Kubernetes cannot be accessed from GitHub Actions"
-
-      - name: Restart Deployment (Important)
-        run: kubectl rollout restart deployment ci-cd-app
+  
