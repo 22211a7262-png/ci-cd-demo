@@ -6,7 +6,26 @@ on:
       - main
 
 jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Unit Tests
+        run: npm test
+
   build-push:
+    needs: unit-test
     runs-on: ubuntu-latest
 
     steps:
@@ -27,6 +46,7 @@ jobs:
         run: docker push ghcr.io/${{ github.repository }}:latest
 
   security-check:
+    needs: build-push
     runs-on: ubuntu-latest
 
     steps:
