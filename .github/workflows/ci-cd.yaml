@@ -42,8 +42,8 @@ jobs:
       - name: Verify Cluster
         run: kubectl get nodes
 
-      - name: Deploy to Kubernetes
-        run: kubectl apply -f k8s/
+      - name: Skip Deploy
+        run: echo "Local Kubernetes cannot be accessed from GitHub Actions"
 
       - name: Restart Deployment (Important)
         run: kubectl rollout restart deployment ci-cd-app
