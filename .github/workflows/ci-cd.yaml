@@ -49,6 +49,8 @@ jobs:
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
 
+      - name: Push Docker Image
+        run: docker push $IMAGE_NAME
 
   security-check:
     needs: build-push
@@ -61,10 +63,14 @@ jobs:
       - name: Install Trivy
         run: |
           sudo apt-get update
+          sudo apt-get install -y wget gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
           sudo apt-get install -y trivy
 
       - name: Trivy FS Scan
-        run: trivy fs --format table -o fs-report.json .
+        run: trivy fs .
 
       - name: Trivy Image Scan
         run: trivy image $IMAGE_NAME
@@ -77,22 +83,17 @@ jobs:
 
   deploy:
     needs: security-check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted   
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set Kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
-
-      - name: Verify Cluster Connection
+      - name: Verify Local Cluster
         run: kubectl get nodes
 
       - name: Deploy to Kubernetes
         run: kubectl apply -f k8s/
 
-      - name: Restart Deployment (pull latest image)
+      - name: Restart Deployment
         run: kubectl rollout restart deployment ci-cd-app
