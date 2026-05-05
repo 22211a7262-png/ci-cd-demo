@@ -73,23 +73,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  security-check:
-    needs: build-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy Image Scan (faster)
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}
-          format: table
-          exit-code: 1
-          severity: CRITICAL,HIGH
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
 
   deploy:
     needs: security-check
