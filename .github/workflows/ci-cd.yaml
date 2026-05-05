@@ -75,7 +75,7 @@ jobs:
 
 
   deploy:
-    needs: security-check
+    needs: build-push
     runs-on: self-hosted
 
     steps:
