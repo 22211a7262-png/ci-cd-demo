@@ -49,8 +49,7 @@ jobs:
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
 
-      - name: Push Docker Image
-        run: docker push $IMAGE_NAME
+
 
   security-check:
     needs: build-push
