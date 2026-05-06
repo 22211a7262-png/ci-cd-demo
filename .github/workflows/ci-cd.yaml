@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ci-cd-demo:latest
 
 jobs:
   unit-test:
@@ -43,13 +43,14 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
 
-
+      - name: Push Docker Image
+        run: docker push $IMAGE_NAME
 
   security-check:
     needs: build-push
@@ -95,4 +96,4 @@ jobs:
         run: kubectl apply -f k8s/
 
       - name: Restart Deployment
-        run: kubectl rollout restart deployment ci-cd-app                   
+        run: kubectl rollout restart deployment ci-cd-app
