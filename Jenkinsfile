@@ -8,10 +8,10 @@ pipeline {
     stages {
 
         stage('Checkout Code') {
-            steps {
-                git 'https://github.com/22211a7262-png/ci-cd-demo.git'
-            }
-        }
+    steps {
+        git branch: 'main', url: 'https://github.com/22211a7262-png/ci-cd-demo.git'
+    }
+}
 
         stage('Install Dependencies') {
             steps {
