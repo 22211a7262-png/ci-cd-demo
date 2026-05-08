@@ -59,6 +59,7 @@ jobs:
 
   deploy:
     runs-on: self-hosted
+    needs: build-push
 
     steps:
       - name: Checkout Code
